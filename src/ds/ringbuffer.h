@@ -2,17 +2,19 @@
 // Licensed under the Apache 2.0 License.
 #pragma once
 
-#include "ringbuffer_types.h"
-
 #include <atomic>
 #include <cstring>
 #include <functional>
 
-// Ideally this would be _mm_pause or similar, but finding cross-platform
-// headers that expose this neatly through OE (ie - non-standard std libs) is
-// awkward. Instead we resort to copying OE, and implementing this directly
-// ourselves.
-#define CCF_PAUSE() asm volatile("pause")
+#ifdef _WIN32
+#  include <intrin.h>
+#else
+#  include <xmmintrin.h>
+#endif
+
+#include "ringbuffer_types.h"
+#include "verified/Ring_Reader_Writer_Misc.h"
+
 
 // This file implements a Multiple-Producer Single-Consumer ringbuffer.
 
@@ -102,34 +104,33 @@ namespace ringbuffer
     }
   };
 
+  /*
   class Reader
   {
     friend class Writer;
 
-    std::vector<uint8_t> buffer;
-    Const c;
-    Var v;
-
+    ringbuffer_struct ringbuf;
+    
   public:
     Reader(const size_t size) :
-      buffer(size, 0),
-      c(buffer.data(), size),
-      v{{0}, {0}, {0}}
-    {}
+     {
+       // init ringbuffer
+     }
 
     size_t read(size_t limit, Handler f)
     {
-      auto mask = c.size - 1;
-      auto hd = v.head.load(std::memory_order_acquire);
+      auto mask = ringbuf.size - 1 ;
+      auto hd = ringbuf.head;
       auto hd_index = hd & mask;
-      auto block = c.size - hd_index;
+      auto block = ringbuf.size - hd_index;
       size_t advance = 0;
       size_t count = 0;
 
       while ((advance < block) && (count < limit))
       {
         auto msg_index = hd_index + advance;
-        auto header = read64(msg_index);
+	// pop should read 64bit data
+        auto header = pop(msg_index);
         auto size = length(header);
 
         // If we see a pending write, we're done.
@@ -186,6 +187,63 @@ namespace ringbuffer
     }
   };
 
+  */
+
+  class Reader {
+    friend class Writer;
+    Ring_ringstruct__uint8_t r;
+  public:
+
+    Reader(const size_t size)
+     {
+       // init ringbuffer
+       r = Reader_init(size);
+     }
+    
+    size_t read(size_t limit, Handler f)
+    {
+      void (**myf)(unsigned int, const unsigned char*, unsigned long) = f.target<void (*)(unsigned int, const unsigned char *, unsigned long)>();
+      if (myf) {
+	return Reader_read(this->r, *myf); 
+      } else
+	// Handler could be capturing some variables
+	return 0;
+    }
+     
+  };
+
+  class Writer : public AbstractWriter {
+
+    // pointer to reader's ringbuffer
+    Ring_ringstruct__uint8_t r;
+  protected:
+      virtual std::optional<size_t> prepare(Message m,
+      size_t size,
+      bool wait = true,
+      size_t* identifier = nullptr) override
+    {
+      return 0;
+    }
+    
+    virtual void finish(const WriteMarker& marker) override {}
+    virtual WriteMarker write_bytes(const WriteMarker& marker, const uint8_t* bytes, size_t size) override
+    {
+      return 0;
+    }
+
+  public:
+
+    Writer(const Reader& reader) : r(reader.r) {}
+
+    Writer(const Writer& that) : r(that.r) {}
+    virtual ~Writer() {}
+
+   void write32(size_t index, uint32_t value)
+    {
+      Writer_write(this->r, value); 
+    }
+  };
+  /*
   class Writer : public AbstractWriter
   {
   protected:
@@ -250,7 +308,7 @@ namespace ringbuffer
           // Retry until there is sufficient space.
           do
           {
-            CCF_PAUSE();
+            _mm_pause();
             r = reserve(rsize);
           } while (!r.has_value());
         }
@@ -417,6 +475,8 @@ namespace ringbuffer
     }
   };
 
+  */
+  
   // This is entirely non-virtual so can be safely passed to the enclave
   class Circuit
   {
