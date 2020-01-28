@@ -53,6 +53,7 @@ def cli_args(add=lambda x: None, parser=None, accept_unknown=False):
         default="../src/runtime_config/gov.lua",
     )
     parser.add_argument("-s", "--app-script", help="Path to app script")
+    parser.add_argument("-j", "--js-app-script", help="Path to js app script")
     parser.add_argument(
         "--ignore-quote",
         help="Ignore node quote (e.g. virtual enclave)",
@@ -88,6 +89,12 @@ def cli_args(add=lambda x: None, parser=None, accept_unknown=False):
     )
     parser.add_argument(
         "--consensus", help="Consensus", default="raft", choices=("raft", "pbft"),
+    )
+    parser.add_argument(
+        "--worker_threads",
+        help="number of worker threads inside the enclave",
+        type=int,
+        default=0,
     )
     parser.add_argument(
         "--pdb", help="Break to debugger on exception", action="store_true"

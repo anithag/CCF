@@ -16,9 +16,10 @@ from loguru import logger as LOG
 id_gen = itertools.count()
 
 
+@reqs.description("Running batch submission of new entries")
 @reqs.supports_methods("BATCH_submit", "BATCH_fetch")
 def test(network, args, batch_size=100, write_key_divisor=1, write_size_multiplier=1):
-    LOG.info(f"Running batch submission of {batch_size} new entries")
+    LOG.info(f"Number of batched entries: {batch_size}")
     primary, _ = network.find_primary()
 
     # Set extended timeout, since some of these successful transactions will take many seconds
@@ -118,7 +119,7 @@ def run_to_destruction(args):
 
 if __name__ == "__main__":
     args = e2e_args.cli_args()
-    args.package = "libluagenericenc"
+    args.package = "libluageneric"
     args.enforce_reqs = True
 
     run(args)
