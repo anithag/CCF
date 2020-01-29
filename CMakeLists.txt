@@ -60,6 +60,7 @@ if("sgx" IN_LIST TARGET)
     ccf.enclave STATIC
     ${CCF_DIR}/src/enclave/main.cpp ${CCF_DIR}/src/enclave/thread_local.cpp
     ${CCF_GENERATED_DIR}/ccf_t.cpp
+    ${CCF_DIR}/src/ds/verified/Ring_Reader_Writer_Misc.c
   )
 
   target_compile_definitions(
@@ -88,6 +89,7 @@ if("sgx" IN_LIST TARGET)
            http_parser.enclave
            lua.enclave
            secp256k1.enclave
+	   vering
   )
 
   set_property(TARGET ccf.enclave PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -103,7 +105,8 @@ if("virtual" IN_LIST TARGET)
   # virtual version
   add_library(
     ccf.virtual STATIC ${CCF_DIR}/src/enclave/main.cpp
-                       ${CCF_DIR}/src/enclave/thread_local.cpp
+    ${CCF_DIR}/src/enclave/thread_local.cpp
+    ${CCF_DIR}/src/ds/verified/Ring_Reader_Writer_Misc.c
   )
 
   target_compile_definitions(
@@ -133,6 +136,7 @@ if("virtual" IN_LIST TARGET)
            http_parser.host
            lua.host
            secp256k1.host
+	   vering
            ${CMAKE_THREAD_LIBS_INIT}
   )
 
@@ -210,7 +214,7 @@ if(BUILD_TESTS)
   )
   use_client_mbedtls(kv_test)
   target_link_libraries(
-    kv_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} secp256k1.host
+    kv_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} secp256k1.host vering
   )
 
   add_unit_test(
@@ -221,7 +225,7 @@ if(BUILD_TESTS)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/test/serializer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/test/hash.cpp
   )
-  target_link_libraries(ds_test PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(ds_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} vering )
 
   add_unit_test(
     ledger_test ${CMAKE_CURRENT_SOURCE_DIR}/src/host/test/ledger.cpp
@@ -231,7 +235,7 @@ if(BUILD_TESTS)
     add_unit_test(
       raft_test ${CMAKE_CURRENT_SOURCE_DIR}/src/consensus/raft/test/main.cpp
     )
-    target_link_libraries(raft_test PRIVATE ${CRYPTO_LIBRARY})
+    target_link_libraries(raft_test PRIVATE ${CRYPTO_LIBRARY} vering)
 
     add_unit_test(
       raft_enclave_test
@@ -239,7 +243,7 @@ if(BUILD_TESTS)
     )
     target_include_directories(raft_enclave_test PRIVATE ${CCFCRYPTO_INC})
     target_link_libraries(
-      raft_enclave_test PRIVATE ${CRYPTO_LIBRARY} secp256k1.host
+      raft_enclave_test PRIVATE ${CRYPTO_LIBRARY} secp256k1.host vering
     )
   endif()
 
@@ -247,14 +251,14 @@ if(BUILD_TESTS)
     crypto_test ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/test/crypto.cpp
   )
   target_include_directories(crypto_test PRIVATE ${CCFCRYPTO_INC})
-  target_link_libraries(crypto_test PRIVATE ${CRYPTO_LIBRARY})
+  target_link_libraries(crypto_test PRIVATE ${CRYPTO_LIBRARY} vering)
 
   add_unit_test(
     history_test ${CMAKE_CURRENT_SOURCE_DIR}/src/node/test/history.cpp
   )
   target_include_directories(history_test PRIVATE ${EVERCRYPT_INC})
   target_link_libraries(
-    history_test PRIVATE ${CRYPTO_LIBRARY} evercrypt.host secp256k1.host
+    history_test PRIVATE ${CRYPTO_LIBRARY} evercrypt.host secp256k1.host vering
   )
 
   add_unit_test(
@@ -262,7 +266,7 @@ if(BUILD_TESTS)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/symmkey.cpp
   )
   use_client_mbedtls(encryptor_test)
-  target_link_libraries(encryptor_test PRIVATE secp256k1.host)
+  target_link_libraries(encryptor_test PRIVATE secp256k1.host vering)
 
   add_unit_test(
     msgpack_serialization_test
@@ -271,23 +275,23 @@ if(BUILD_TESTS)
 
   add_unit_test(tls_test ${CMAKE_CURRENT_SOURCE_DIR}/src/tls/test/main.cpp)
   target_link_libraries(
-    tls_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} secp256k1.host
+    tls_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} secp256k1.host vering
   )
 
   add_unit_test(
     keyexchange_test ${CMAKE_CURRENT_SOURCE_DIR}/src/tls/test/keyexchange.cpp
   )
   use_client_mbedtls(keyexchange_test)
-  target_link_libraries(keyexchange_test PRIVATE secp256k1.host)
+  target_link_libraries(keyexchange_test PRIVATE secp256k1.host vering)
 
   add_unit_test(
     channels_test ${CMAKE_CURRENT_SOURCE_DIR}/src/node/test/channels.cpp
   )
   use_client_mbedtls(channels_test)
-  target_link_libraries(channels_test PRIVATE secp256k1.host)
+  target_link_libraries(channels_test PRIVATE secp256k1.host vering)
 
   add_unit_test(http_test ${CMAKE_CURRENT_SOURCE_DIR}/src/enclave/test/http.cpp)
-  target_link_libraries(http_test PRIVATE http_parser.host)
+  target_link_libraries(http_test PRIVATE http_parser.host vering)
 
   add_unit_test(
     frontend_test
@@ -295,7 +299,7 @@ if(BUILD_TESTS)
   )
   target_link_libraries(
     frontend_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} evercrypt.host lua.host
-                          secp256k1.host
+                          secp256k1.host vering
   )
 
   if(NOT PBFT)
@@ -305,7 +309,7 @@ if(BUILD_TESTS)
     )
     target_link_libraries(
       membervoting_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} evercrypt.host
-                                lua.host secp256k1.host
+                                lua.host secp256k1.host vering
     )
 
     add_unit_test(
@@ -314,7 +318,7 @@ if(BUILD_TESTS)
     )
     target_link_libraries(
       nodefrontend_test PRIVATE ${CMAKE_THREAD_LIBS_INIT} evercrypt.host
-                                lua.host secp256k1.host
+                                lua.host secp256k1.host vering
     )
 
     if(NOT ENV{RUNTIME_CONFIG_DIR})
@@ -331,7 +335,7 @@ if(BUILD_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/apps/luageneric/luageneric.cpp
     )
     target_include_directories(luageneric_test PRIVATE ${LUA_DIR})
-    target_link_libraries(luageneric_test PRIVATE lua.host secp256k1.host)
+    target_link_libraries(luageneric_test PRIVATE lua.host secp256k1.host vering)
   endif()
 
   add_unit_test(
@@ -339,13 +343,15 @@ if(BUILD_TESTS)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/luainterp/test/luakv.cpp
   )
   target_include_directories(lua_test PRIVATE ${LUA_DIR})
-  target_link_libraries(lua_test PRIVATE lua.host)
+  target_link_libraries(lua_test PRIVATE lua.host vering)
 
   # Picobench benchmarks
   add_picobench(map_bench SRCS src/ds/test/map_bench.cpp)
   add_picobench(logger_bench SRCS src/ds/test/logger_bench.cpp)
   add_picobench(json_bench SRCS src/ds/test/json_bench.cpp)
-  add_picobench(ringbuffer_bench SRCS src/ds/test/ringbuffer_bench.cpp)
+  add_picobench(ringbuffer_bench
+    SRCS src/ds/test/ringbuffer_bench.cpp
+    )
   add_picobench(
     tls_bench
     SRCS src/tls/test/bench.cpp

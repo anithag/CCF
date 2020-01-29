@@ -124,7 +124,10 @@ add_custom_command(
 
 install(FILES ${CCF_GENERATED_DIR}/frame_generated.h DESTINATION generated)
 
-include_directories(${CCF_DIR}/src ${CCF_GENERATED_DIR})
+include_directories(${CCF_DIR}/src ${CCF_GENERATED_DIR}
+  /home/anitha/everest/kremlin/include
+  /home/anitha/everest/kremlin/kremlib/dist/minimal
+  )
 
 include_directories(
   SYSTEM ${CCF_DIR}/3rdparty ${CCF_DIR}/3rdparty/hacl-star
@@ -515,8 +518,11 @@ function(add_picobench name)
 
   add_dependencies(${name} flatbuffers)
 
+  set(CMAKE_PREFIX_PATH /home/anitha/verified-examples/src/extracted)
+  find_library(VERING vering)
+  
   target_link_libraries(
-    ${name} PRIVATE ${CMAKE_THREAD_LIBS_INIT} ${PARSED_ARGS_LINK_LIBS}
+    ${name} PRIVATE ${CMAKE_THREAD_LIBS_INIT} ${VERING} ${PARSED_ARGS_LINK_LIBS}
   )
 
   # -Wall -Werror catches a number of warnings in picobench
