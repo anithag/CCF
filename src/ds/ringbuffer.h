@@ -134,15 +134,6 @@ namespace ringbuffer
     // pointer to reader's ringbuffer
     Ring_ringstruct__uint8_t r;
   protected:
-      virtual std::optional<size_t> prepare(Message m,
-      size_t size,
-      bool wait = true,
-      size_t* identifier = nullptr) override
-    {
-      return 0;
-    }
-    
-    virtual void finish(const WriteMarker& marker) override {}
     virtual WriteMarker write_bytes(const WriteMarker& marker, const uint8_t* bytes, size_t size) override
     {
       return 0;
@@ -154,6 +145,17 @@ namespace ringbuffer
 
     Writer(const Writer& that) : r(that.r) {}
     virtual ~Writer() {}
+
+    //fix later
+    virtual std::optional<size_t> prepare(Message m,
+      size_t size,
+      bool wait = true,
+      size_t* identifier = nullptr) override
+    {
+      return 0;
+    }
+    
+    virtual void finish(const WriteMarker& marker) override {}
 
    void write32(size_t index, uint32_t value)
     {

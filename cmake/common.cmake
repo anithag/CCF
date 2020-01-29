@@ -260,7 +260,7 @@ function(add_unit_test name)
   target_include_directories(${name} PRIVATE src ${CCFCRYPTO_INC})
   enable_coverage(${name})
   target_link_libraries(
-    ${name} PRIVATE -stdlib=libc++ -lc++ -lc++abi ccfcrypto.host
+    ${name} PRIVATE -stdlib=libc++ -lc++ -lc++abi ccfcrypto.host -lvering
   )
   add_dependencies(${name} flatbuffers)
   use_client_mbedtls(${name})
@@ -320,6 +320,7 @@ if("virtual" IN_LIST TARGET)
             ccfcrypto.host
             evercrypt.host
             CURL::libcurl
+	    vering
   )
   add_dependencies(cchost.virtual flatbuffers)
 
@@ -518,8 +519,8 @@ function(add_picobench name)
 
   add_dependencies(${name} flatbuffers)
 
-  set(CMAKE_PREFIX_PATH /home/anitha/verified-examples/src/extracted)
-  find_library(VERING vering)
+#  set(CMAKE_PREFIX_PATH /home/anitha/verified-examples/src/extracted)
+#  find_library(VERING vering)
   
   target_link_libraries(
     ${name} PRIVATE ${CMAKE_THREAD_LIBS_INIT} ${VERING} ${PARSED_ARGS_LINK_LIBS}

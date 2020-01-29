@@ -60,7 +60,7 @@ if("sgx" IN_LIST TARGET)
     ccf.enclave STATIC
     ${CCF_DIR}/src/enclave/main.cpp ${CCF_DIR}/src/enclave/thread_local.cpp
     ${CCF_GENERATED_DIR}/ccf_t.cpp
-    ${CCF_DIR}/src/ds/verified/Ring_Reader_Writer_Misc.c
+#    ${CCF_DIR}/src/ds/verified/Ring_Reader_Writer_Misc.c
   )
 
   target_compile_definitions(
@@ -106,7 +106,7 @@ if("virtual" IN_LIST TARGET)
   add_library(
     ccf.virtual STATIC ${CCF_DIR}/src/enclave/main.cpp
     ${CCF_DIR}/src/enclave/thread_local.cpp
-    ${CCF_DIR}/src/ds/verified/Ring_Reader_Writer_Misc.c
+ #   ${CCF_DIR}/src/ds/verified/Ring_Reader_Writer_Misc.c
   )
 
   target_compile_definitions(
@@ -351,16 +351,17 @@ if(BUILD_TESTS)
   add_picobench(json_bench SRCS src/ds/test/json_bench.cpp)
   add_picobench(ringbuffer_bench
     SRCS src/ds/test/ringbuffer_bench.cpp
+    LINK_LIBS vering
     )
   add_picobench(
     tls_bench
     SRCS src/tls/test/bench.cpp
-    LINK_LIBS secp256k1.host
+    LINK_LIBS secp256k1.host vering
   )
   add_picobench(
     merkle_bench
     SRCS src/node/test/merkle_bench.cpp
-    LINK_LIBS ccfcrypto.host evercrypt.host secp256k1.host
+    LINK_LIBS ccfcrypto.host evercrypt.host secp256k1.host 
     INCLUDE_DIRS ${EVERCRYPT_INC}
   )
   add_picobench(

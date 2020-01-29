@@ -149,7 +149,7 @@ Reader_read(Ring_ringstruct__uint8_t r, void (*f)(uint32_t x0, const uint8_t *x1
       uint8_t d = Ring_pop__uint8_t(r);
       uint8_t *dptr = KRML_HOST_MALLOC(sizeof (uint8_t));
       dptr[0U] = d;
-      uint32_t s = 0;
+      uint32_t s = 1;
       f(m, dptr, (uint64_t)1U);
       return s;
     }
